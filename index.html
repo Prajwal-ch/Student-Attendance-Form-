@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        label, input, select {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .loading {
+            display: none;
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Student Attendance Form</h2>
+
+    <label for="section">Select Section:</label>
+    <select id="section" required onchange="loadStudents()">
+        <option value="">Select Section</option>
+    </select>
+
+    <label for="subject">Select Subject:</label>
+    <select id="subject" required>
+        <option value="">Select Subject</option>
+    </select>
+
+    <label for="date">Date:</label>
+    <input type="date" id="date" required>
+
+    <label for="time">Class Time:</label>
+    <input type="text" id="time" placeholder="E.g., 10:00 - 11:00 AM" required>
+
+    <label for="concept">Concept:</label>
+    <input type="text" id="concept" placeholder="Enter Concept Name" required>
+
+    <h3>Mark Attendance</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Roll No.</th>
+                <th>Name</th>
+                <th>Present</th>
+            </tr>
+        </thead>
+        <tbody id="studentList">
+            <!-- Students will be added dynamically -->
+        </tbody>
+    </table>
+
+    <button onclick="submitData()">Submit Attendance</button>
+    <p class="loading">Submitting Attendance, Please Wait...</p>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbz_czv1vaAvnNq4zJQz4Gc0Utjb1nItvsASWd8a34HEHiHl9oTfhumE5WFnVlt0weNrug/exec"; // Replace with your actual URL
+
+        function loadSections() {
+            fetch(`${scriptURL}?action=getSections`)
+                .then(response => response.json())
+                .then(sections => {
+                    const sectionDropdown = document.getElementById("section");
+                    sectionDropdown.innerHTML = '<option value="">Select Section</option>';
+                    sections.forEach(section => {
+                        let option = document.createElement("option");
+                        option.value = section;
+                        option.textContent = section;
+                        sectionDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching sections:", error);
+                    alert("Failed to load sections. Please try again.");
+                });
+        }
+
+        function loadSubjects() {
+            fetch(`${scriptURL}?action=getSubjects`)
+                .then(response => response.json())
+                .then(subjects => {
+                    const subjectDropdown = document.getElementById("subject");
+                    subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+                    subjects.forEach(subject => {
+                        let option = document.createElement("option");
+                        option.value = subject;
+                        option.textContent = subject;
+                        subjectDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching subjects:", error);
+                    alert("Failed to load subjects. Please try again.");
+                });
+        }
+
+        function loadStudents() {
+            const section = document.getElementById("section").value;
+
+            if (!section) return;
+
+            fetch(`${scriptURL}?action=getStudents&section=${section}`)
+                .then(response => response.json())
+                .then(students => {
+                    const studentList = document.getElementById("studentList");
+                    studentList.innerHTML = "";
+                    students.forEach(student => {
+                        let row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${student.roll}</td>
+                            <td>${student.name}</td>
+                            <td><input type="checkbox" class="attendance" data-roll="${student.roll}" data-name="${student.name}"></td>
+                        `;
+                        studentList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching students:", error);
+                    alert("Failed to load students. Please try again.");
+                });
+        }
+
+        function submitData() {
+            document.querySelector(".loading").style.display = "block";
+
+            const section = document.getElementById("section").value;
+            const subject = document.getElementById("subject").value;
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+            const concept = document.getElementById("concept").value;
+
+            if (!section || !subject || !date || !time || !concept) {
+                alert("Please fill in all required fields.");
+                document.querySelector(".loading").style.display = "none";
+                return;
+            }
+
+            let attendance = [];
+            document.querySelectorAll(".attendance").forEach(input => {
+                attendance.push({
+                    roll: input.dataset.roll,
+                    present: input.checked ? "Present" : "Absent"
+                });
+            });
+
+            if (attendance.length === 0) {
+                alert("No students loaded. Please select a section first.");
+                document.querySelector(".loading").style.display = "none";
+                return;
+            }
+
+            let data = { section, subject, date, time, concept, attendance };
+
+            fetch(scriptURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                return response.json();
+            })
+            .then(result => {
+                if (result && result.message) {
+                    alert(result.message);
+                } else {
+                    alert("Attendance Submitted Successfully!");
+                }
+            })
+            .catch(error => {
+                console.error("Error submitting data:", error);
+                alert("Error submitting attendance. Please try again.");
+            })
+            .finally(() => {
+                document.querySelector(".loading").style.display = "none";
+            });
+        }
+
+        window.onload = () => { loadSections(); loadSubjects(); };
+    </script>
+
+</body>
+</html>
