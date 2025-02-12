@@ -157,63 +157,83 @@
                 });
         }
 
-        function submitData() {
-            document.querySelector(".loading").style.display = "block";
+      function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : null;
+  var response;
 
-            const section = document.getElementById("section").value;
-            const subject = document.getElementById("subject").value;
-            const date = document.getElementById("date").value;
-            const time = document.getElementById("time").value;
-            const concept = document.getElementById("concept").value;
+  if (action === "getSections") {
+    response = getSections();
+  } else if (action === "getStudents" && e.parameter && e.parameter.section) {
+    response = getStudents(e.parameter.section);
+  } else if (action === "getSubjects") {
+    response = getSubjects();
+  } else {
+    response = ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid request" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
-            if (!section || !subject || !date || !time || !concept) {
-                alert("Please fill in all required fields.");
-                document.querySelector(".loading").style.display = "none";
-                return;
-            }
+  return response.setHeaders({
+    "Access-Control-Allow-Origin": "*", // Allow requests from any domain
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  });
+}
 
-            let attendance = [];
-            document.querySelectorAll(".attendance").forEach(input => {
-                attendance.push({
-                    roll: input.dataset.roll,
-                    present: input.checked ? "Present" : "Absent"
-                });
-            });
+function doPost(e) {
+  try {
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid request data" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-            if (attendance.length === 0) {
-                alert("No students loaded. Please select a section first.");
-                document.querySelector(".loading").style.display = "none";
-                return;
-            }
+    var requestData = JSON.parse(e.postData.contents);
+    var { subject, date, time, concept, section, attendance } = requestData;
 
-            let data = { section, subject, date, time, concept, attendance };
+    if (!subject || !date || !time || !concept || !section || !Array.isArray(attendance)) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing required fields" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-            fetch(scriptURL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) throw new Error(`Server error: ${response.status}`);
-                return response.json();
-            })
-            .then(result => {
-                if (result && result.message) {
-                    alert(result.message);
-                } else {
-                    alert("Attendance Submitted Successfully!");
-                }
-            })
-            .catch(error => {
-                console.error("Error submitting data:", error);
-                alert("Error submitting attendance. Please try again.");
-            })
-            .finally(() => {
-                document.querySelector(".loading").style.display = "none";
-            });
-        }
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(subject);
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Sheet not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-        window.onload = () => { loadSections(); loadSubjects(); };
+    var lastColumn = sheet.getLastColumn() + 1;
+
+    // Insert Data
+    sheet.getRange(1, lastColumn).setValue(date);
+    sheet.getRange(2, lastColumn).setValue(time);
+    sheet.getRange(3, lastColumn).setValue(concept);
+    sheet.getRange(4, lastColumn).setValue("Attendance (" + section + ")");
+
+    // Insert Attendance Data
+    attendance.forEach((student, index) => {
+      if (student.roll && typeof student.present !== "undefined") {
+        sheet.getRange(index + 5, lastColumn).setValue(student.roll + " - " + student.present);
+      }
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Attendance recorded" }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders({
+        "Access-Control-Allow-Origin": "*", // Allow requests from any domain
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      });
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders({
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      });
+  }
+}
+
     </script>
 
 </body>
