@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,24 +11,20 @@
             margin: auto;
             padding: 20px;
         }
-
         label, input, select {
             display: block;
             margin-bottom: 10px;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
         }
-
         th, td {
             border: 1px solid black;
             padding: 8px;
             text-align: center;
         }
-
         button {
             margin-top: 15px;
             padding: 10px;
@@ -38,30 +33,24 @@
             border: none;
             cursor: pointer;
         }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
         .loading {
             display: none;
             color: red;
         }
     </style>
 </head>
-
 <body>
 
     <h2>Student Attendance Form</h2>
 
     <label for="section">Select Section:</label>
     <select id="section" required onchange="loadStudents()">
-        <option value="">Select Section</option>
+        <option value="">Loading sections...</option>
     </select>
 
     <label for="subject">Select Subject:</label>
     <select id="subject" required>
-        <option value="">Select Subject</option>
+        <option value="">Loading subjects...</option>
     </select>
 
     <label for="date">Date:</label>
@@ -91,24 +80,14 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL = " if (action === "getSections") {
-    return getSections();
-  } else if (action === "getStudents" && e.parameter.section) {
-    return getStudents(e.parameter.section);
-  } else if (action === "getSubjects") {
-    return getSubjects();
-  }
-
-  return ContentService.createTextOutput("")
-    .setMimeType(ContentService.MimeType.JSON);
-"; // Replace with your actual URL
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyQPbUm8C3CxEhh2vGFUNS7dxo9R3XY_gtqgvMKcHVvC58MWIapfm8fVgdKrlK2rLmC/exec"; // Replace with your deployed URL
 
         function loadSections() {
-            fetch(`${scriptURL}?action=getSections`)
+            fetch(${scriptURL}?action=getSections)
                 .then(response => response.json())
                 .then(sections => {
                     const sectionDropdown = document.getElementById("section");
-                    sectionDropdown.innerHTML = '<option value="">Select Section</option>';
+                    sectionDropdown.innerHTML = "";
                     sections.forEach(section => {
                         let option = document.createElement("option");
                         option.value = section;
@@ -116,18 +95,15 @@
                         sectionDropdown.appendChild(option);
                     });
                 })
-                .catch(error => {
-                    console.error("Error fetching sections:", error);
-                    alert("Failed to load sections. Please try again.");
-                });
+                .catch(error => console.error("Error fetching sections:", error));
         }
 
         function loadSubjects() {
-            fetch(`${scriptURL}?action=getSubjects`)
+            fetch(${scriptURL}?action=getSubjects)
                 .then(response => response.json())
                 .then(subjects => {
                     const subjectDropdown = document.getElementById("subject");
-                    subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+                    subjectDropdown.innerHTML = "";
                     subjects.forEach(subject => {
                         let option = document.createElement("option");
                         option.value = subject;
@@ -135,18 +111,14 @@
                         subjectDropdown.appendChild(option);
                     });
                 })
-                .catch(error => {
-                    console.error("Error fetching subjects:", error);
-                    alert("Failed to load subjects. Please try again.");
-                });
+                .catch(error => console.error("Error fetching subjects:", error));
         }
 
         function loadStudents() {
             const section = document.getElementById("section").value;
 
-            if (!section) return;
-
-            fetch(`${scriptURL}?action=getStudents&section=${section}`)
+            console.log("Section selected");
+            fetch(${scriptURL}?action=getStudents&section=${section})
                 .then(response => response.json())
                 .then(students => {
                     const studentList = document.getElementById("studentList");
@@ -161,89 +133,25 @@
                         studentList.appendChild(row);
                     });
                 })
-                .catch(error => {
-                    console.error("Error fetching students:", error);
-                    alert("Failed to load students. Please try again.");
-                });
+                .catch(error => console.error("Error fetching students:", error));
         }
 
-      function doGet(e) {
-  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : null;
-  var response;
+        function submitData() {
+            document.querySelector(".loading").style.display = "block";
+            const section = document.getElementById("section").value;
+            const subject = document.getElementById("subject").value;
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+            const concept = document.getElementById("concept").value;
 
-  if (action === "getSections") {
-    response = getSections();
-  } else if (action === "getStudents" && e.parameter && e.parameter.section) {
-    response = getStudents(e.parameter.section);
-  } else if (action === "getSubjects") {
-    response = getSubjects();
-  } else {
-    response = ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid request" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+            let data = { section, subject, date, time, concept };
 
-  return response.setHeaders({
-    "Access-Control-Allow-Origin": "*", // Allow requests from any domain
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-  });
-}
+            fetch(scriptURL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+                .then(() => alert("Attendance Submitted Successfully!"))
+                .finally(() => document.querySelector(".loading").style.display = "none");
+        }
 
-function doPost(e) {
-  try {
-    if (!e || !e.postData || !e.postData.contents) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid request data" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var requestData = JSON.parse(e.postData.contents);
-    var { subject, date, time, concept, section, attendance } = requestData;
-
-    if (!subject || !date || !time || !concept || !section || !Array.isArray(attendance)) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing required fields" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(subject);
-    if (!sheet) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Sheet not found" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var lastColumn = sheet.getLastColumn() + 1;
-
-    // Insert Data
-    sheet.getRange(1, lastColumn).setValue(date);
-    sheet.getRange(2, lastColumn).setValue(time);
-    sheet.getRange(3, lastColumn).setValue(concept);
-    sheet.getRange(4, lastColumn).setValue("Attendance (" + section + ")");
-
-    // Insert Attendance Data
-    attendance.forEach((student, index) => {
-      if (student.roll && typeof student.present !== "undefined") {
-        sheet.getRange(index + 5, lastColumn).setValue(student.roll + " - " + student.present);
-      }
-    });
-
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Attendance recorded" }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders({
-        "Access-Control-Allow-Origin": "*", // Allow requests from any domain
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      });
-
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders({
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      });
-  }
-}
-
+        window.onload = () => { loadSections(); loadSubjects(); };
     </script>
 
 </body>
