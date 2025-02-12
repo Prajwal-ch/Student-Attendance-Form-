@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,20 +12,24 @@
             margin: auto;
             padding: 20px;
         }
+
         label, input, select {
             display: block;
             margin-bottom: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
         }
+
         th, td {
             border: 1px solid black;
             padding: 8px;
             text-align: center;
         }
+
         button {
             margin-top: 15px;
             padding: 10px;
@@ -33,24 +38,30 @@
             border: none;
             cursor: pointer;
         }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
         .loading {
             display: none;
             color: red;
         }
     </style>
 </head>
+
 <body>
 
     <h2>Student Attendance Form</h2>
 
     <label for="section">Select Section:</label>
     <select id="section" required onchange="loadStudents()">
-        <option value="">Loading sections...</option>
+        <option value="">Select Section</option>
     </select>
 
     <label for="subject">Select Subject:</label>
     <select id="subject" required>
-        <option value="">Loading subjects...</option>
+        <option value="">Select Subject</option>
     </select>
 
     <label for="date">Date:</label>
@@ -80,75 +91,142 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbyQPbUm8C3CxEhh2vGFUNS7dxo9R3XY_gtqgvMKcHVvC58MWIapfm8fVgdKrlK2rLmC/exec"; // Replace with your deployed URL
+        const scriptURL ="https://script.google.com/macros/s/AKfycby2fQsNrWJ-9Jbn-OTrC8zC4r3nwU2lWMnNvU6aaC2bG2n-gr1FJLTwEnUv7IZ_Bg/exec"; // Replace with your actual URL
 
         function loadSections() {
-            fetch(${scriptURL}?action=getSections)
-                .then(response => response.json())
-                .then(sections => {
-                    const sectionDropdown = document.getElementById("section");
-                    sectionDropdown.innerHTML = "";
-                    sections.forEach(section => {
-                        let option = document.createElement("option");
-                        option.value = section;
-                        option.textContent = section;
-                        sectionDropdown.appendChild(option);
-                    });
-                })
-                .catch(error => console.error("Error fetching sections:", error));
-        }
+    fetch(`${scriptURL}?action=getSections`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== "success" || !Array.isArray(data.data)) {
+                console.error("Unexpected sections format:", data);
+                return;
+            }
+
+            const sectionDropdown = document.getElementById("section");
+            sectionDropdown.innerHTML = '<option value="">Select Section</option>';
+            data.data.forEach(section => {
+                let option = document.createElement("option");
+                option.value = section;
+                option.textContent = section;
+                sectionDropdown.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching sections:", error);
+            alert("Failed to load sections. Please try again.");
+        });
+}
 
         function loadSubjects() {
-            fetch(${scriptURL}?action=getSubjects)
-                .then(response => response.json())
-                .then(subjects => {
-                    const subjectDropdown = document.getElementById("subject");
-                    subjectDropdown.innerHTML = "";
-                    subjects.forEach(subject => {
-                        let option = document.createElement("option");
-                        option.value = subject;
-                        option.textContent = subject;
-                        subjectDropdown.appendChild(option);
-                    });
-                })
-                .catch(error => console.error("Error fetching subjects:", error));
-        }
+        fetch(`${scriptURL}?action=getSubjects`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== "success" || !Array.isArray(data.data)) {
+                console.error("Unexpected subjects format:", data);
+                return;
+            }
+
+            const subjectDropdown = document.getElementById("subject");
+            subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+            data.data.forEach(subject => {
+                let option = document.createElement("option");
+                option.value = subject;
+                option.textContent = subject;
+                subjectDropdown.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching subjects:", error);
+            alert("Failed to load subjects. Please try again.");
+        });
+}
 
         function loadStudents() {
-            const section = document.getElementById("section").value;
+        const section = document.getElementById("section").value;
+        if (!section) return;
 
-            console.log("Section selected");
-            fetch(${scriptURL}?action=getStudents&section=${section})
-                .then(response => response.json())
-                .then(students => {
-                    const studentList = document.getElementById("studentList");
-                    studentList.innerHTML = "";
-                    students.forEach(student => {
-                        let row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${student.roll}</td>
-                            <td>${student.name}</td>
-                            <td><input type="checkbox" class="attendance" data-roll="${student.roll}" data-name="${student.name}"></td>
-                        `;
-                        studentList.appendChild(row);
-                    });
-                })
-                .catch(error => console.error("Error fetching students:", error));
-        }
+        fetch(`${scriptURL}?action=getStudents&section=${section}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== "success" || !Array.isArray(data.data)) {
+                console.error("Unexpected students format:", data);
+                alert("Failed to load students. Please try again.");
+                return;
+            }
+
+            const studentList = document.getElementById("studentList");
+            studentList.innerHTML = ""; // Clear previous students
+
+            data.data.forEach(student => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${student.roll}</td>
+                    <td>${student.name}</td>
+                    <td><input type="checkbox" class="attendance" data-roll="${student.roll}" data-name="${student.name}"></td>
+                `;
+                studentList.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching students:", error);
+            alert("Failed to load students. Please try again.");
+        });
+}
+
+      
 
         function submitData() {
             document.querySelector(".loading").style.display = "block";
+
             const section = document.getElementById("section").value;
             const subject = document.getElementById("subject").value;
             const date = document.getElementById("date").value;
             const time = document.getElementById("time").value;
             const concept = document.getElementById("concept").value;
 
-            let data = { section, subject, date, time, concept };
+            if (!section || !subject || !date || !time || !concept) {
+                alert("Please fill in all required fields.");
+                document.querySelector(".loading").style.display = "none";
+                return;
+            }
 
-            fetch(scriptURL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
-                .then(() => alert("Attendance Submitted Successfully!"))
-                .finally(() => document.querySelector(".loading").style.display = "none");
+            let attendance = [];
+            document.querySelectorAll(".attendance").forEach(input => {
+                attendance.push({
+                    roll: input.dataset.roll,
+                    present: input.checked ? "Present" : "Absent"
+                });
+            });
+
+            if (attendance.length === 0) {
+                alert("No students loaded. Please select a section first.");
+                document.querySelector(".loading").style.display = "none";
+                return;
+            }
+
+            let data = { section, subject, date, time, concept, attendance };
+
+            fetch(scriptURL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+})
+.then(response => response.json()) // ✅ Parse JSON response
+.then(result => {
+    if (result && result.message) {
+        alert(result.message);
+    } else {
+        alert("Attendance Submitted Successfully!");
+    }
+})
+.catch(error => {
+    console.error("Error submitting data:", error);
+    alert("Error submitting attendance. Please try again.");
+})
+.finally(() => {
+    document.querySelector(".loading").style.display = "none";
+});
+
         }
 
         window.onload = () => { loadSections(); loadSubjects(); };
