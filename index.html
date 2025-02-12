@@ -91,7 +91,17 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxLjN-vl6cWxO-1nqwOtuQWt1Jo9bEhSVP33cqHrZ6PoE4pEKHwSXgZZY4lHjuZllvV/exec"; // Replace with your actual URL
+        const scriptURL = " if (action === "getSections") {
+    return getSections();
+  } else if (action === "getStudents" && e.parameter.section) {
+    return getStudents(e.parameter.section);
+  } else if (action === "getSubjects") {
+    return getSubjects();
+  }
+
+  return ContentService.createTextOutput("")
+    .setMimeType(ContentService.MimeType.JSON);
+"; // Replace with your actual URL
 
         function loadSections() {
             fetch(`${scriptURL}?action=getSections`)
