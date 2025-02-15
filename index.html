@@ -91,7 +91,7 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbysIyDqLT89iuDh4oKIgj10HuyMSESlUCDc-S_qUF3jFqTNYOzgGKobSDu5BhytMc4D/exec"; 
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxPi01g6Mtf_WMwCTFgZKexEe6_6J-jqfnRqepfz4UdtRjlYHboul9Bo7pnSA0qpyoI/exec"; 
 
         function loadSections() {
             fetch(`${scriptURL}?action=getSections`)
@@ -202,23 +202,27 @@
 
     fetch(scriptURL, {
         method: "POST",
-        mode: "cors",  // ✅ Fix CORS issues
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({ section, subject, date, time, concept, attendance })
     })
-        .then(response => response.json())
-        .then(result => {
-            alert(result.message || "Attendance Submitted Successfully!");
-        })
-        .catch(error => {
-            console.error("Error submitting data:", error);
-            alert("Error submitting attendance. Please try again.");
-        })
-        .finally(() => {
-            document.querySelector(".loading").style.display = "none";
-        });
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === "success") {
+            alert("Attendance Submitted Successfully!");
+        } else {
+            alert("Error: " + result.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error submitting data:", error);
+        alert("Failed to submit attendance.");
+    })
+    .finally(() => {
+        document.querySelector(".loading").style.display = "none";
+    });
 }
-
 
         window.onload = () => { loadSections(); loadSubjects(); };
     </script>
