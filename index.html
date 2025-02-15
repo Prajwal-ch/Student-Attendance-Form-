@@ -91,143 +91,134 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL ="https://script.google.com/macros/s/AKfycbzduf8r_YVsxp5VOpVS1KM5vZ_eu5diYO-_nTQoDRbrBtkjo5anGTtz0djAyNGGaLJ0/exec"; // Replace with your actual URL
+        const scriptURL = "https://script.google.com/macros/s/AKfycbysIyDqLT89iuDh4oKIgj10HuyMSESlUCDc-S_qUF3jFqTNYOzgGKobSDu5BhytMc4D/exec"; 
 
         function loadSections() {
-    fetch(`${scriptURL}?action=getSections`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status !== "success" || !Array.isArray(data.data)) {
-                console.error("Unexpected sections format:", data);
-                return;
-            }
+            fetch(`${scriptURL}?action=getSections`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== "success" || !Array.isArray(data.data)) {
+                        throw new Error("Invalid data format");
+                    }
 
-            const sectionDropdown = document.getElementById("section");
-            sectionDropdown.innerHTML = '<option value="">Select Section</option>';
-            data.data.forEach(section => {
-                let option = document.createElement("option");
-                option.value = section;
-                option.textContent = section;
-                sectionDropdown.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error("Error fetching sections:", error);
-            alert("Failed to load sections. Please try again.");
-        });
-}
+                    const sectionDropdown = document.getElementById("section");
+                    sectionDropdown.innerHTML = '<option value="">Select Section</option>';
+                    data.data.forEach(section => {
+                        let option = document.createElement("option");
+                        option.value = section;
+                        option.textContent = section;
+                        sectionDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching sections:", error);
+                    alert("Failed to load sections. Please try again.");
+                });
+        }
 
         function loadSubjects() {
-        fetch(`${scriptURL}?action=getSubjects`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status !== "success" || !Array.isArray(data.data)) {
-                console.error("Unexpected subjects format:", data);
-                return;
-            }
+            fetch(`${scriptURL}?action=getSubjects`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== "success" || !Array.isArray(data.data)) {
+                        throw new Error("Invalid data format");
+                    }
 
-            const subjectDropdown = document.getElementById("subject");
-            subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
-            data.data.forEach(subject => {
-                let option = document.createElement("option");
-                option.value = subject;
-                option.textContent = subject;
-                subjectDropdown.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error("Error fetching subjects:", error);
-            alert("Failed to load subjects. Please try again.");
-        });
-}
+                    const subjectDropdown = document.getElementById("subject");
+                    subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+                    data.data.forEach(subject => {
+                        let option = document.createElement("option");
+                        option.value = subject;
+                        option.textContent = subject;
+                        subjectDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching subjects:", error);
+                    alert("Failed to load subjects. Please try again.");
+                });
+        }
 
         function loadStudents() {
-        const section = document.getElementById("section").value;
-        if (!section) return;
+            const section = document.getElementById("section").value;
+            if (!section) return;
 
-        fetch(`${scriptURL}?action=getStudents&section=${section}`)
+            fetch(`${scriptURL}?action=getStudents&section=${encodeURIComponent(section)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Student API Response:", data);
+
+                    const studentList = document.getElementById("studentList");
+                    studentList.innerHTML = ""; // Clear previous entries
+
+                    if (data.status !== "success" || !Array.isArray(data.data)) {
+                        throw new Error("Invalid data format from API");
+                    }
+
+                    // Populate students into the table
+                    data.data.forEach(student => {
+                        let row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${student.roll}</td>
+                            <td>${student.name}</td>
+                            <td><input type="checkbox" class="attendance" data-roll="${student.roll}" data-name="${student.name}"></td>
+                        `;
+                        studentList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching students:", error);
+                    alert("Failed to load students. Please try again.");
+                });
+        }
+
+        function submitData() {
+    document.querySelector(".loading").style.display = "block";
+
+    const section = document.getElementById("section").value;
+    const subject = document.getElementById("subject").value;
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    const concept = document.getElementById("concept").value;
+
+    if (!section || !subject || !date || !time || !concept) {
+        alert("Please fill in all required fields.");
+        document.querySelector(".loading").style.display = "none";
+        return;
+    }
+
+    let attendance = [];
+    document.querySelectorAll(".attendance").forEach(input => {
+        attendance.push({
+            roll: input.dataset.roll,
+            present: input.checked ? "Present" : "Absent"
+        });
+    });
+
+    fetch(scriptURL, {
+        method: "POST",
+        mode: "cors",  // ✅ Fix CORS issues
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section, subject, date, time, concept, attendance })
+    })
         .then(response => response.json())
-        .then(data => {
-            if (data.status !== "success" || !Array.isArray(data.data)) {
-                console.error("Unexpected students format:", data);
-                alert("Failed to load students. Please try again.");
-                return;
-            }
-
-            const studentList = document.getElementById("studentList");
-            studentList.innerHTML = ""; // Clear previous students
-
-            data.data.forEach(student => {
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${student.roll}</td>
-                    <td>${student.name}</td>
-                    <td><input type="checkbox" class="attendance" data-roll="${student.roll}" data-name="${student.name}"></td>
-                `;
-                studentList.appendChild(row);
-            });
+        .then(result => {
+            alert(result.message || "Attendance Submitted Successfully!");
         })
         .catch(error => {
-            console.error("Error fetching students:", error);
-            alert("Failed to load students. Please try again.");
+            console.error("Error submitting data:", error);
+            alert("Error submitting attendance. Please try again.");
+        })
+        .finally(() => {
+            document.querySelector(".loading").style.display = "none";
         });
 }
 
-      
-
-        function submitData() {
-            document.querySelector(".loading").style.display = "block";
-
-            const section = document.getElementById("section").value;
-            const subject = document.getElementById("subject").value;
-            const date = document.getElementById("date").value;
-            const time = document.getElementById("time").value;
-            const concept = document.getElementById("concept").value;
-
-            if (!section || !subject || !date || !time || !concept) {
-                alert("Please fill in all required fields.");
-                document.querySelector(".loading").style.display = "none";
-                return;
-            }
-
-            let attendance = [];
-            document.querySelectorAll(".attendance").forEach(input => {
-                attendance.push({
-                    roll: input.dataset.roll,
-                    present: input.checked ? "Present" : "Absent"
-                });
-            });
-
-            if (attendance.length === 0) {
-                alert("No students loaded. Please select a section first.");
-                document.querySelector(".loading").style.display = "none";
-                return;
-            }
-
-            let data = { section, subject, date, time, concept, attendance };
-
-            fetch(scriptURL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-})
-.then(response => response.json()) // ✅ Parse JSON response
-.then(result => {
-    if (result && result.message) {
-        alert(result.message);
-    } else {
-        alert("Attendance Submitted Successfully!");
-    }
-})
-.catch(error => {
-    console.error("Error submitting data:", error);
-    alert("Error submitting attendance. Please try again.");
-})
-.finally(() => {
-    document.querySelector(".loading").style.display = "none";
-});
-
-        }
 
         window.onload = () => { loadSections(); loadSubjects(); };
     </script>
