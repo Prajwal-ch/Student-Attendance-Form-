@@ -16,6 +16,8 @@
         label, input, select {
             display: block;
             margin-bottom: 10px;
+            width: 100%;
+            padding: 8px;
         }
 
         table {
@@ -37,6 +39,7 @@
             color: white;
             border: none;
             cursor: pointer;
+            width: 100%;
         }
 
         button:hover {
@@ -46,6 +49,8 @@
         .loading {
             display: none;
             color: red;
+            text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -91,8 +96,9 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxPi01g6Mtf_WMwCTFgZKexEe6_6J-jqfnRqepfz4UdtRjlYHboul9Bo7pnSA0qpyoI/exec"; 
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxmmb41J3Xf9v6vEDcoTzMNnDtYovlDgcsI6va7SR4pW9ZdlKtf460RG3JWaAtFuMn4/exec"; // ✅ Replace with your actual Google Apps Script URL
 
+        // ✅ Load Sections from Google Sheets
         function loadSections() {
             fetch(`${scriptURL}?action=getSections`)
                 .then(response => response.json())
@@ -116,6 +122,7 @@
                 });
         }
 
+        // ✅ Load Subjects from Google Sheets
         function loadSubjects() {
             fetch(`${scriptURL}?action=getSubjects`)
                 .then(response => response.json())
@@ -139,28 +146,21 @@
                 });
         }
 
+        // ✅ Load Students when a section is selected
         function loadStudents() {
             const section = document.getElementById("section").value;
             if (!section) return;
 
             fetch(`${scriptURL}?action=getStudents&section=${encodeURIComponent(section)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP Error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    console.log("Student API Response:", data);
-
                     const studentList = document.getElementById("studentList");
                     studentList.innerHTML = ""; // Clear previous entries
 
                     if (data.status !== "success" || !Array.isArray(data.data)) {
-                        throw new Error("Invalid data format from API");
+                        throw new Error("Invalid data format");
                     }
 
-                    // Populate students into the table
                     data.data.forEach(student => {
                         let row = document.createElement("tr");
                         row.innerHTML = `
@@ -177,53 +177,53 @@
                 });
         }
 
+        // ✅ Submit Attendance Data
         function submitData() {
-    document.querySelector(".loading").style.display = "block";
+            document.querySelector(".loading").style.display = "block";
 
-    const section = document.getElementById("section").value;
-    const subject = document.getElementById("subject").value;
-    const date = document.getElementById("date").value;
-    const time = document.getElementById("time").value;
-    const concept = document.getElementById("concept").value;
+            const section = document.getElementById("section").value;
+            const subject = document.getElementById("subject").value;
+            const date = document.getElementById("date").value;
+            const time = document.getElementById("time").value;
+            const concept = document.getElementById("concept").value;
 
-    if (!section || !subject || !date || !time || !concept) {
-        alert("Please fill in all required fields.");
-        document.querySelector(".loading").style.display = "none";
-        return;
-    }
+            if (!section || !subject || !date || !time || !concept) {
+                alert("Please fill in all required fields.");
+                document.querySelector(".loading").style.display = "none";
+                return;
+            }
 
-    let attendance = [];
-    document.querySelectorAll(".attendance").forEach(input => {
-        attendance.push({
-            roll: input.dataset.roll,
-            present: input.checked ? "Present" : "Absent"
-        });
-    });
+            let attendance = [];
+            document.querySelectorAll(".attendance").forEach(input => {
+                attendance.push({
+                    roll: input.dataset.roll,
+                    present: input.checked ? "Present" : "Absent"
+                });
+            });
 
-    fetch(scriptURL, {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ section, subject, date, time, concept, attendance })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.status === "success") {
-            alert("Attendance Submitted Successfully!");
-        } else {
-            alert("Error: " + result.message);
+            fetch(scriptURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ section, subject, date, time, concept, attendance })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === "success") {
+                    alert("Attendance Submitted Successfully!");
+                } else {
+                    alert("Error: " + result.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error submitting data:", error);
+                alert("Failed to submit attendance.");
+            })
+            .finally(() => {
+                document.querySelector(".loading").style.display = "none";
+            });
         }
-    })
-    .catch(error => {
-        console.error("Error submitting data:", error);
-        alert("Failed to submit attendance.");
-    })
-    .finally(() => {
-        document.querySelector(".loading").style.display = "none";
-    });
-}
 
+        // ✅ Load sections and subjects on page load
         window.onload = () => { loadSections(); loadSubjects(); };
     </script>
 
