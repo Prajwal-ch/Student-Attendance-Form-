@@ -96,89 +96,89 @@
     <p class="loading">Submitting Attendance, Please Wait...</p>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxmmb41J3Xf9v6vEDcoTzMNnDtYovlDgcsI6va7SR4pW9ZdlKtf460RG3JWaAtFuMn4/exec"; // ✅ Replace with your actual Google Apps Script URL
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyUyKxC547pt_Yno91NzofLw9efaOeJ1ruHYGUYHiKO66crqm7YjmW-O4vfly-kG9SE/exec"; // ✅ Replace with your actual Google Apps Script URL
 
         // ✅ Load Sections from Google Sheets
-        function loadSections() {
-            fetch(`${scriptURL}?action=getSections`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status !== "success" || !Array.isArray(data.data)) {
-                        throw new Error("Invalid data format");
-                    }
+        async function loadSections() {
+            try {
+                const response = await fetch(`${scriptURL}?action=getSections`);
+                const data = await response.json();
+                
+                if (data.status !== "success" || !Array.isArray(data.data)) {
+                    throw new Error("Invalid data format");
+                }
 
-                    const sectionDropdown = document.getElementById("section");
-                    sectionDropdown.innerHTML = '<option value="">Select Section</option>';
-                    data.data.forEach(section => {
-                        let option = document.createElement("option");
-                        option.value = section;
-                        option.textContent = section;
-                        sectionDropdown.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching sections:", error);
-                    alert("Failed to load sections. Please try again.");
+                const sectionDropdown = document.getElementById("section");
+                sectionDropdown.innerHTML = '<option value="">Select Section</option>';
+                data.data.forEach(section => {
+                    let option = document.createElement("option");
+                    option.value = section;
+                    option.textContent = section;
+                    sectionDropdown.appendChild(option);
                 });
+            } catch (error) {
+                console.error("Error fetching sections:", error);
+                alert("Failed to load sections. Please try again.");
+            }
         }
 
         // ✅ Load Subjects from Google Sheets
-        function loadSubjects() {
-            fetch(`${scriptURL}?action=getSubjects`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status !== "success" || !Array.isArray(data.data)) {
-                        throw new Error("Invalid data format");
-                    }
+        async function loadSubjects() {
+            try {
+                const response = await fetch(`${scriptURL}?action=getSubjects`);
+                const data = await response.json();
+                
+                if (data.status !== "success" || !Array.isArray(data.data)) {
+                    throw new Error("Invalid data format");
+                }
 
-                    const subjectDropdown = document.getElementById("subject");
-                    subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
-                    data.data.forEach(subject => {
-                        let option = document.createElement("option");
-                        option.value = subject;
-                        option.textContent = subject;
-                        subjectDropdown.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching subjects:", error);
-                    alert("Failed to load subjects. Please try again.");
+                const subjectDropdown = document.getElementById("subject");
+                subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+                data.data.forEach(subject => {
+                    let option = document.createElement("option");
+                    option.value = subject;
+                    option.textContent = subject;
+                    subjectDropdown.appendChild(option);
                 });
+            } catch (error) {
+                console.error("Error fetching subjects:", error);
+                alert("Failed to load subjects. Please try again.");
+            }
         }
 
         // ✅ Load Students when a section is selected
-        function loadStudents() {
+        async function loadStudents() {
             const section = document.getElementById("section").value;
             if (!section) return;
 
-            fetch(`${scriptURL}?action=getStudents&section=${encodeURIComponent(section)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const studentList = document.getElementById("studentList");
-                    studentList.innerHTML = ""; // Clear previous entries
+            try {
+                const response = await fetch(`${scriptURL}?action=getStudents&section=${encodeURIComponent(section)}`);
+                const data = await response.json();
 
-                    if (data.status !== "success" || !Array.isArray(data.data)) {
-                        throw new Error("Invalid data format");
-                    }
+                const studentList = document.getElementById("studentList");
+                studentList.innerHTML = ""; // Clear previous entries
 
-                    data.data.forEach(student => {
-                        let row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${student.roll}</td>
-                            <td>${student.name}</td>
-                            <td><input type="checkbox" class="attendance" data-roll="${student.roll}" data-name="${student.name}"></td>
-                        `;
-                        studentList.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching students:", error);
-                    alert("Failed to load students. Please try again.");
+                if (data.status !== "success" || !Array.isArray(data.data)) {
+                    throw new Error("Invalid data format");
+                }
+
+                data.data.forEach(student => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${student.roll}</td>
+                        <td>${student.name}</td>
+                        <td><input type="checkbox" class="attendance" data-roll="${student.roll}"></td>
+                    `;
+                    studentList.appendChild(row);
                 });
+            } catch (error) {
+                console.error("Error fetching students:", error);
+                alert("Failed to load students. Please try again.");
+            }
         }
 
         // ✅ Submit Attendance Data
-        function submitData() {
+        async function submitData() {
             document.querySelector(".loading").style.display = "block";
 
             const section = document.getElementById("section").value;
@@ -197,34 +197,42 @@
             document.querySelectorAll(".attendance").forEach(input => {
                 attendance.push({
                     roll: input.dataset.roll,
-                    present: input.checked ? "Present" : "Absent"
+                    present: input.checked
                 });
             });
 
-            fetch(scriptURL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ section, subject, date, time, concept, attendance })
-            })
-            .then(response => response.json())
-            .then(result => {
+            const payload = { section, subject, date, time, concept, attendance };
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log("Server Response:", result);
+
                 if (result.status === "success") {
                     alert("Attendance Submitted Successfully!");
                 } else {
                     alert("Error: " + result.message);
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error("Error submitting data:", error);
                 alert("Failed to submit attendance.");
-            })
-            .finally(() => {
+            } finally {
                 document.querySelector(".loading").style.display = "none";
-            });
+            }
         }
 
         // ✅ Load sections and subjects on page load
         window.onload = () => { loadSections(); loadSubjects(); };
+
     </script>
 
 </body>
