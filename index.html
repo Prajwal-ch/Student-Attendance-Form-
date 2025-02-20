@@ -4,236 +4,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Form</title>
+    <title>Attendance System</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
         }
 
-        label, input, select {
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
             display: block;
-            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        select,
+        input,
+        button {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
         table {
             width: 100%;
+            margin-top: 20px;
             border-collapse: collapse;
-            margin-top: 15px;
         }
 
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: center;
-        }
-
-        button {
-            margin-top: 15px;
+        th,
+        td {
             padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .loading {
-            display: none;
-            color: red;
             text-align: center;
-            font-weight: bold;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .button-group button {
+            flex: 1;
+            margin: 5px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .select-all {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 600px) {
+
+            table,
+            th,
+            td {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <h2>Student Attendance Form</h2>
+    <div class="container">
+        <h2>Attendance System</h2>
 
-    <label for="section">Select Section:</label>
-    <select id="section" required onchange="loadStudents()">
-        <option value="">Select Section</option>
-    </select>
+        <label for="section">Select Section:</label>
+        <select id="section" onchange="loadStudents()">
+            <option value="">Select Section</option>
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+        </select>
 
-    <label for="subject">Select Subject:</label>
-    <select id="subject" required>
-        <option value="">Select Subject</option>
-    </select>
+        <label for="subject">Select Subject:</label>
+        <select id="subject">
+            <option value="">Select Subject</option>
+            <option value="DataStructure-A">DataStructure-A</option>
+            <option value="DataStructure-B">DataStructure-B</option>
+            <option value="JAVA-A">JAVA-A</option>
+            <option value="JAVA-B">JAVA-B</option>
+            <option value="OperatingSystems-A">OperatingSystems-A</option>
+            <option value="OperatingSystems-B">OperatingSystems-B</option>
+            <option value="IndianConstitution-A">IndianConstitution-A</option>
+            <option value="IndianConstitution-B">IndianConstitution-B</option>
+            <option value="Kannada-A">Kannada-A</option>
+            <option value="Kannada-B">Kannada-B</option>
+            <option value="English-A">English-A</option>
+            <option value="English-B">English-B</option>
+            <option value="DS_Lab-A">DS_Lab-A</option>
+            <option value="DS_Lab-B">DS_Lab-B</option>
+            <option value="JAVA_Lab-A">JAVA_Lab-A</option>
+            <option value="JAVA_Lab-B">JAVA_Lab-B</option>
+            <option value="OS_Lab-A">OS_Lab-A</option>
+            <option value="OS_Lab-B">OS_Lab-B</option>
+        </select>
 
-    <label for="date">Date:</label>
-    <input type="date" id="date" required>
+        <label for="time">Class Time (Range):</label>
+        <input type="time" id="startTime"> to <input type="time" id="endTime">
 
-    <label for="time">Class Time:</label>
-    <input type="text" id="time" placeholder="E.g., 10:00 - 11:00 AM" required>
+        <label for="topic">Topic Taught:</label>
+        <input type="text" id="topic" placeholder="Enter Topic Covered">
 
-    <label for="concept">Concept:</label>
-    <input type="text" id="concept" placeholder="Enter Concept Name" required>
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>USN</th>
+                    <th>Name</th>
+                    <th><button class="select-all" onclick="selectAll()">Select All as Present</button></th>
+                </tr>
+            </thead>
+            <tbody id="studentList">
+                <!-- Student rows will be inserted here dynamically -->
+            </tbody>
+        </table>
 
-    <h3>Mark Attendance</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Roll No.</th>
-                <th>Name</th>
-                <th>Present</th>
-            </tr>
-        </thead>
-        <tbody id="studentList">
-            <!-- Students will be added dynamically -->
-        </tbody>
-    </table>
-
-    <button onclick="submitData()">Submit Attendance</button>
-    <p class="loading">Submitting Attendance, Please Wait...</p>
+        <div class="button-group">
+            <button class="submit-btn" onclick="submitAttendance()">Submit</button>
+        </div>
+    </div>
 
     <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbxT4P04D4KCMA6Wp_FgA5Y2If8GpAnK7UnlMf4nrxeVzHONyHxqt1_LdNCRUd1plCYf/exec"; // ✅ Replace with your actual Google Apps Script URL
+        const studentsData = {
+            "A": [
+            { usn: "U03NK24S0026", name: "Darshan S D" },
+            { usn: "U03NK24S0027", name: "Suresh" },
+            { usn: "U03NK24S0028", name: "Suhel" },
+            { usn: "U03NK24S0029", name: "Manoj" },
+            { usn: "U03NK24S0030", name: "Mahanandish C" },
+            { usn: "U03NK24S0031", name: "Arvind S" },
+            { usn: "U03NK24S0032", name: "Sunil S" },
+            { usn: "U03NK24S0033", name: "Mothilal N" },
+            { usn: "U03NK24S0034", name: "Gireesh Khane" },
+            { usn: "U03NK24S0035", name: "Chethan S" },
+            { usn: "U03NK24S0036", name: "Mohammed Muzakkir" },
+            { usn: "U03NK24S0037", name: "Manoj K" },
+            { usn: "U03NK24S0038", name: "RAVIKUMAR RAMESH HADAPAD" },
+            { usn: "U03NK24S0039", name: "V Deepali" },
+            { usn: "U03NK24S0040", name: "B.Meghana" },
+            { usn: "U03NK24S0041", name: "Chinmayi H M" },
+            { usn: "U03NK24S0042", name: "Hemanth Aradhya N" },
+            { usn: "U03NK24S0043", name: "Keerthan G" },
+            { usn: "U03NK24S0044", name: "Kishore K" },
+            { usn: "U03NK24S0045", name: "Monisha N" },
+            { usn: "U03NK24S0046", name: "Nuthan H N" },
+            { usn: "U03NK24S0047", name: "Pavan H G" },
+            { usn: "U03NK24S0048", name: "Priyanka J" },
+            { usn: "U03NK24S0049", name: "Rachana R" },
+            { usn: "U03NK24S0050", name: "Rithuja M" },
+            { usn: "U03NK24S0051", name: "Samresh S" },
+            { usn: "U03NK24S0052", name: "Santosh" },
+            { usn: "U03NK24S0053", name: "Shashikala M" },
+            { usn: "U03NK24S0054", name: "Shravani C R" },
+            { usn: "U03NK24S0055", name: "Shreyas" },
+            { usn: "U03NK24S0056", name: "Siddappa Nayaka" },
+            { usn: "U03NK24S0057", name: "Somashekhar Yadav G M" },
+            { usn: "U03NK24S0058", name: "Shashikala G E" },
+            { usn: "U03NK24S0059", name: "Savitri" },
+            { usn: "U03NK24S0060", name: "R Varsha" },
+            { usn: "U03NK24S0061", name: "Prarthana K C" },
+            { usn: "U03NK24S0062", name: "Shruthi R" },
+            { usn: "U03NK24S0063", name: "Bharath V" },
+            { usn: "U03NK24S0064", name: "Bhanukeerthi P" },
+            { usn: "U03NK24S0065", name: "Lalitha G S" },
+            { usn: "U03NK24S0066", name: "Pooja U" },
+            { usn: "U03NK24S0067", name: "Chethan Prasad B S" },
+            { usn: "U03NK24S0068", name: "Ananya Miraskar P" },
+            { usn: "U03NK24S0069", name: "D Pallavi" },
+            { usn: "U03NK24S0070", name: "Darshan G" },
+            { usn: "U03NK24S0071", name: "Divya B" },
+            { usn: "U03NK24S0072", name: "Divya Shree K" },
+            { usn: "U03NK24S0073", name: "Gagana M R" },
+            { usn: "U03NK24S0074", name: "Gowtham R" },
+            { usn: "U03NK24S0075", name: "Hemavathi C G" },
+            { usn: "U03NK24S0076", name: "K Prajwal" },
+            { usn: "U03NK24S0077", name: "K S Kusuma" },
+            { usn: "U03NK24S0078", name: "Kousalya S" },
+            { usn: "U03NK24S0079", name: "Lavanya M" },
+            { usn: "U03NK24S0080", name: "Mahesha M" },
+            { usn: "U03NK24S0081", name: "Manoj Reddy A" }
+            ],
+            "B": [
+            { usn: "U03NK24S0082", name: "Kavya H" },
+            { usn: "U03NK24S0083", name: "Preetham M Akki" },
+            { usn: "U03NK24S0084", name: "Rajesh R B" },
+            { usn: "U03NK24S0085", name: "Siri V" },
+            { usn: "U03NK24S0086", name: "Sahana R" },
+            { usn: "U03NK24S0087", name: "Spoorthi S R" },
+            { usn: "U03NK24S0088", name: "Suman B V" },
+            { usn: "U03NK24S0089", name: "Sunita" },
+            { usn: "U03NK24S0090", name: "Dhanya Shree G J" },
+            { usn: "U03NK24S0091", name: "N S Ganavi" },
+            { usn: "U03NK24S0092", name: "Neha C" },
+            { usn: "U03NK24S0093", name: "Pooja M R" },
+            { usn: "U03NK24S0094", name: "Umesh A V" },
+            { usn: "U03NK24S0095", name: "Preetham S" },
+            { usn: "U03NK24S0096", name: "Renuka S" },
+            { usn: "U03NK24S0097", name: "Praven Kumar S" },
+            { usn: "U03NK24S0098", name: "Punith Kumar M A" },
+            { usn: "U03NK24S0099", name: "Niranjan S Andaani" },
+            { usn: "U03NK24S0100", name: "Madan Sunil Chimal" },
+            { usn: "U03NK24S0101", name: "Manoj G" },
+            { usn: "U03NK24S0102", name: "Prajwal C H" },
+            { usn: "U03NK24S0103", name: "Hemanth C K" },
+            { usn: "U03NK24S0104", name: "Harshitha N" },
+            { usn: "U03NK24S0105", name: "Nithin M" },
+            { usn: "U03NK24S0106", name: "Pruthvi M" },
+            { usn: "U03NK24S0107", name: "Srinivas S N" },
+            { usn: "U03NK24S0108", name: "Suraj S R" },
+            { usn: "U03NK24S0109", name: "Y Ruchit Kumar" },
+            { usn: "U03NK24S0110", name: "Sachin B M" },
+            { usn: "U03NK24S0111", name: "Chandana C" },
+            { usn: "U03NK24S0112", name: "Gagan B" },
+            { usn: "U03NK24S0113", name: "Harshavardan D R" },
+            { usn: "U03NK24S0114", name: "Lakshmi P" },
+            { usn: "U03NK24S0115", name: "Puneeth Raj N R" },
+            { usn: "U03NK24S0116", name: "Bhavani H" },
+            { usn: "U03NK24S0117", name: "Bhagya Lakshmi S" },
+            { usn: "U03NK24S0118", name: "Syed Musharaf" },
+            { usn: "U03NK24S0119", name: "Rajesh V" },
+            { usn: "U03NK24S0120", name: "Navaneeth J S" },
+            { usn: "U03NK24S0121", name: "Karthik T N" },
+            { usn: "U03NK24S0122", name: "K Gangadhara" },
+            { usn: "U03NK24S0123", name: "Kavana M" },
+            { usn: "U03NK24S0124", name: "Monisha P" },
+            { usn: "U03NK24S0125", name: "Pavan V Gopal" },
+            { usn: "U03NK24S0126", name: "P S Mahesh Babu" },
+            { usn: "U03NK24S0127", name: "Srinidhi H M" },
+            { usn: "U03NK24S0128", name: "Prabhu M H" },
+            { usn: "U03NK24S0129", name: "Manoj Kumar D S" },
+            { usn: "U03NK24S0130", name: "Nandini G A" },
+            { usn: "U03NK24S0131", name: "Hemanth K S" },
+            { usn: "U03NK24S0132", name: "Vedhashree S" },
+            { usn: "U03NK24S0133", name: "Venukumar N" },
+            { usn: "U03NK24S0134", name: "Yashwanth K V" },
+            { usn: "U03NK24S0135", name: "S Mahesh" },
+            { usn: "U03NK24S0136", name: "Nakul Chandrashekar" },
+            { usn: "U03NK24S0137", name: "Nithin B N" },
+            { usn: "U03NK24S0138", name: "Varun Prasad M" },
+            { usn: "U03NK24S0139", name: "Rukminishreeya R" }
+            ],
+        };
 
-        // ✅ Load Sections from Google Sheets
-        async function loadSections() {
-            try {
-                const response = await fetch(`${scriptURL}?action=getSections`);
-                const data = await response.json();
-                
-                if (data.status !== "success" || !Array.isArray(data.data)) {
-                    throw new Error("Invalid data format");
-                }
+        function loadStudents() {
+            let section = document.getElementById("section").value;
+            let studentList = document.getElementById("studentList");
+            studentList.innerHTML = "";
 
-                const sectionDropdown = document.getElementById("section");
-                sectionDropdown.innerHTML = '<option value="">Select Section</option>';
-                data.data.forEach(section => {
-                    let option = document.createElement("option");
-                    option.value = section;
-                    option.textContent = section;
-                    sectionDropdown.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error fetching sections:", error);
-                alert("Failed to load sections. Please try again.");
-            }
-        }
-
-        // ✅ Load Subjects from Google Sheets
-        async function loadSubjects() {
-            try {
-                const response = await fetch(`${scriptURL}?action=getSubjects`);
-                const data = await response.json();
-                
-                if (data.status !== "success" || !Array.isArray(data.data)) {
-                    throw new Error("Invalid data format");
-                }
-
-                const subjectDropdown = document.getElementById("subject");
-                subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
-                data.data.forEach(subject => {
-                    let option = document.createElement("option");
-                    option.value = subject;
-                    option.textContent = subject;
-                    subjectDropdown.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error fetching subjects:", error);
-                alert("Failed to load subjects. Please try again.");
-            }
-        }
-
-        // ✅ Load Students when a section is selected
-        async function loadStudents() {
-            const section = document.getElementById("section").value;
-            if (!section) return;
-
-            try {
-                const response = await fetch(`${scriptURL}?action=getStudents&section=${encodeURIComponent(section)}`);
-                const data = await response.json();
-
-                const studentList = document.getElementById("studentList");
-                studentList.innerHTML = ""; // Clear previous entries
-
-                if (data.status !== "success" || !Array.isArray(data.data)) {
-                    throw new Error("Invalid data format");
-                }
-
-                data.data.forEach(student => {
+            if (studentsData[section]) {
+                studentsData[section].forEach(student => {
                     let row = document.createElement("tr");
                     row.innerHTML = `
-                        <td>${student.roll}</td>
-                        <td>${student.name}</td>
-                        <td><input type="checkbox" class="attendance" data-roll="${student.roll}"></td>
-                    `;
+                    <td>${student.usn}</td>
+                    <td>${student.name}</td>
+                    <td><input type="checkbox" class="present-checkbox" data-usn="${student.usn}" data-name="${student.name}"></td>
+                `;
                     studentList.appendChild(row);
                 });
-            } catch (error) {
-                console.error("Error fetching students:", error);
-                alert("Failed to load students. Please try again.");
             }
         }
 
-        // ✅ Submit Attendance Data
-        async function submitData() {
-            document.querySelector(".loading").style.display = "block";
+        function selectAll() {
+            let checkboxes = document.querySelectorAll(".present-checkbox");
+            checkboxes.forEach(checkbox => checkbox.checked = true);
+        }
 
-            const section = document.getElementById("section").value;
-            const subject = document.getElementById("subject").value;
-            const date = document.getElementById("date").value;
-            const time = document.getElementById("time").value;
-            const concept = document.getElementById("concept").value;
+        function submitAttendance() {
+            let section = document.getElementById("section").value;
+            let subject = document.getElementById("subject").value;
+            let startTime = document.getElementById("startTime").value;
+            let endTime = document.getElementById("endTime").value;
+            let topic = document.getElementById("topic").value;
 
-            if (!section || !subject || !date || !time || !concept) {
-                alert("Please fill in all required fields.");
-                document.querySelector(".loading").style.display = "none";
+            if (!section || !subject || !startTime || !endTime || !topic) {
+                alert("Please fill all details before submitting.");
                 return;
             }
 
-            let attendance = [];
-            document.querySelectorAll(".attendance").forEach(input => {
-                attendance.push({
-                    roll: input.dataset.roll,
-                    present: input.checked
+            let attendanceData = {
+                section: section,
+                subject: subject,
+                time: `${startTime} - ${endTime}`,
+                topic: topic,
+                students: []
+            };
+
+            let checkboxes = document.querySelectorAll(".present-checkbox");
+            checkboxes.forEach(checkbox => {
+                attendanceData.students.push({
+                    usn: checkbox.getAttribute("data-usn"),
+                    name: checkbox.getAttribute("data-name"),
+                    present: checkbox.checked
                 });
             });
 
-            const payload = { section, subject, date, time, concept, attendance };
+            console.log("Submitting Attendance:", attendanceData);
 
-            try {
-                const response = await fetch(scriptURL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+            fetch("https://script.google.com/macros/s/AKfycbxcIumnlZVzmgwR4AYKFB79oEBWmR_WbrsyZpNPCBENGq9Y15lVZF_CkpgYQ9s6pOhH/exec", {
+                method: "POST",
+                mode: "no-cors", // Avoid CORS issues
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(attendanceData)
+            })
+                .then(response => console.log("Attendance submitted successfully!"))
+                .catch(error => console.error("Error submitting attendance:", error));
 
-                if (!response.ok) {
-                    throw new Error(`HTTP Error! Status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log("Server Response:", result);
-
-                if (result.status === "success") {
-                    alert("Attendance Submitted Successfully!");
-                } else {
-                    alert("Error: " + result.message);
-                }
-            } catch (error) {
-                console.error("Error submitting data:", error);
-                alert("Failed to submit attendance.");
-            } finally {
-                document.querySelector(".loading").style.display = "none";
-            }
+            alert("Attendance Submitted! Check Google Sheet.");
         }
-
-        // ✅ Load sections and subjects on page load
-        window.onload = () => { loadSections(); loadSubjects(); };
 
     </script>
 
 </body>
+
 </html>
