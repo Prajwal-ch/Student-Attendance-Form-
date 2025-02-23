@@ -112,25 +112,19 @@
         <label for="subject">Select Subject:</label>
         <select id="subject">
             <option value="">Select Subject</option>
-            <option value="DataStructure-A">DataStructure-A</option>
-            <option value="DataStructure-B">DataStructure-B</option>
-            <option value="JAVA-A">JAVA-A</option>
-            <option value="JAVA-B">JAVA-B</option>
-            <option value="OperatingSystems-A">OperatingSystems-A</option>
-            <option value="OperatingSystems-B">OperatingSystems-B</option>
-            <option value="IndianConstitution-A">IndianConstitution-A</option>
-            <option value="IndianConstitution-B">IndianConstitution-B</option>
-            <option value="Kannada-A">Kannada-A</option>
-            <option value="Kannada-B">Kannada-B</option>
-            <option value="English-A">English-A</option>
-            <option value="English-B">English-B</option>
-            <option value="DS_Lab-A">DS_Lab-A</option>
-            <option value="DS_Lab-B">DS_Lab-B</option>
-            <option value="JAVA_Lab-A">JAVA_Lab-A</option>
-            <option value="JAVA_Lab-B">JAVA_Lab-B</option>
-            <option value="OS_Lab-A">OS_Lab-A</option>
-            <option value="OS_Lab-B">OS_Lab-B</option>
+            <option value="DataStructure">Data Structure</option>
+            <option value="JAVA">JAVA</option>
+            <option value="OperatingSystems">Operating Systems</option>
+            <option value="IndianConstitution">Indian Constitution</option>
+            <option value="Kannada">Kannada</option>
+            <option value="English">English</option>
+            <option value="DS_Lab">DS_Lab</option>
+            <option value="JAVA_Lab">JAVA_Lab</option>
+            <option value="OS_Lab">OS_Lab</option>
         </select>
+
+        <label for="date">date:</label>
+        <input type="date" id="date" placeholder="dd-mm-yyyy">
 
         <label for="time">Class Time (Range):</label>
         <input type="time" id="startTime"> to <input type="time" id="endTime">
@@ -209,7 +203,6 @@
             { usn: "U03NK24S0073", name: "Gagana M R" },
             { usn: "U03NK24S0074", name: "Gowtham R" },
             { usn: "U03NK24S0075", name: "Hemavathi C G" },
-            { usn: "U03NK24S0076", name: "K Prajwal" },
             { usn: "U03NK24S0077", name: "K S Kusuma" },
             { usn: "U03NK24S0078", name: "Kousalya S" },
             { usn: "U03NK24S0079", name: "Lavanya M" },
@@ -304,6 +297,7 @@
         function submitAttendance() {
             let section = document.getElementById("section").value;
             let subject = document.getElementById("subject").value;
+            let date = document.getElementById("date").value;
             let startTime = document.getElementById("startTime").value;
             let endTime = document.getElementById("endTime").value;
             let topic = document.getElementById("topic").value;
@@ -316,6 +310,7 @@
             let attendanceData = {
                 section: section,
                 subject: subject,
+                date: date,
                 time: `${startTime} - ${endTime}`,
                 topic: topic,
                 students: []
@@ -332,7 +327,7 @@
 
             console.log("Submitting Attendance:", attendanceData);
 
-            fetch("https://script.google.com/macros/s/AKfycbxvjnQMLMFk-SSsarMJkRW8x9cgYF-4aOQ1tRKVOEi_XCYLc5QyYxYGw0uK13u2mtOY/exec", {
+            fetch("https://script.google.com/macros/s/AKfycbxg9V8FNsr1Yo2trqNjwyGzTwojxvZpmgoD9nap6_CZavfVnP_g-1dQYpVnsn3C1LLV/exec", {
                 method: "POST",
                 mode: "no-cors", // Avoid CORS issues
                 headers: {
@@ -340,8 +335,9 @@
                 },
                 body: JSON.stringify(attendanceData)
             })
-                .then(response => console.log("Attendance submitted successfully!"))
-                .catch(error => console.error("Error submitting attendance:", error));
+            .then((response) => response.json())
+  .then((data) => console.log("Success:", data))
+  .catch((error) => console.error("Error:", error));
 
             alert("Attendance Submitted! Check Google Sheet.");
         }
