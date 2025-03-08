@@ -5,21 +5,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance System</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+        /* Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200vh;
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
         }
 
         .container {
+            width: 100%;
             max-width: 800px;
             margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .input-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 12px;
+            padding-left: 40px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+
+        .input-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
         }
 
         h2 {
@@ -98,7 +166,22 @@
 </head>
 
 <body>
-    <div class="container">
+
+    <div class="container" id="login-container">
+        <h2>Login</h2>
+        <div class="input-box">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="Email" required>
+        </div>
+        <div class="input-box">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="Password" required>
+        </div>
+        <button class="login-btn" onclick="login()">Login</button>
+        <p>Don't have an account? <a href="#" onclick="signup()">Sign Up</a></p>
+    </div>
+    
+    <div class="container hidden" id="attendance-container">
         <h2>Attendance System</h2>
 
         <label for="section">Select Section:</label>
@@ -150,6 +233,53 @@
     </div>
 
     <script>
+         const firebaseConfig = {
+        apiKey: "AIzaSyCpdOl_Hk-PtuVJc13XhXeC0vdrBJSf7S4",
+        authDomain: "bca-attendance-system.firebaseapp.com",
+        projectId: "bca-attendance-system",
+        storageBucket: "bca-attendance-system.appspot.com",
+        messagingSenderId: "939081288605",
+        appId: "1:939081288605:web:21e43d130ca06faf43bd74"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    function login() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(() => {
+                alert("Login Successful!");
+                document.getElementById("login-container").classList.add("hidden");
+                document.getElementById("attendance-container").classList.remove("hidden");
+            })
+            .catch(error => {
+            let errorMessage = "Login Failed!";
+            if (error.code === "auth/wrong-password") {
+                errorMessage = "Your entered password is wrong.";
+            } else if (error.code === "auth/user-not-found") {
+                errorMessage = "No account found with this email.";
+            } else if (error.code === "auth/invalid-email") {
+                errorMessage = "Invalid email format.";
+            }
+            alert(errorMessage);
+            });
+    }
+
+    function signup() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then(() => {
+                alert("Signup Successful! Now you can log in.");
+            })
+            .catch(error => {
+                alert("Signup Failed: " + error.message);
+            });
+    }
+
         const studentsData = {
             "A": [
             { usn: "U03NK24S0026", name: "Darshan S D" },
@@ -322,7 +452,7 @@
 
             console.log("Submitting Attendance:", attendanceData);
 
-            fetch("https://script.google.com/macros/s/AKfycby041H7ODdl4BMzkJLfihQN4mdqi-l_-qWlhgpeWDALVVka8c_xs-m-KLGtOxIDzM9f/exec", {
+            fetch("https://script.google.com/macros/s/AKfycbxcPV3I7BJTCXBJV7l9SSNH9JpjWyd73OOStDcqfDuwBlN5ludMA_KtGQqvE1jIdPDX/exec", {
                 method: "POST",
                 mode: "no-cors", // Avoid CORS issues
                 headers: {
